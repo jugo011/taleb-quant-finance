@@ -1,32 +1,22 @@
-import numpy as np
 import pandas as pd
+import numpy as np
 
-def load_curve(path="data/curve.csv"):
-    """CSV → DataFrame mit 'tenor' und 'rate'."""
-    return pd.read_csv(path)
+def pv_swap_full(nominal: float, fixed_rate: float, zeros: dict, freq: int = 1) -> float:
+    """PV eines Pay-Fixed/Receive-Float Par-Swaps bei jährlicher Auszahlung."""
+    fixed_leg = sum(fixed_rate / freq * nominal * df for df in zeros.values())
+    float_leg = nominal * (1 - list(zeros.values())[-1])  # Par-Annahme
+    return fixed_leg - float_leg  # positiv = Vorteil Pay-Fixed
 
-def bootstrap_zero(df_curve):
-    """
-    Minimale Zero-Kurve: Diskontfaktor = exp(-rate * tenor)
-    (reicht für Demo-Zwecke).
-    """
-    zeros = {}
-    for tenor, rate in df_curve.values:
-        zeros[tenor] = np.exp(-rate * tenor)
-    return zeros
-
-def pv_swap(nominal, fixed_rate, zeros, freq=1):
-    """PV = Fixed-Leg – Float-Leg (vereinfachte Par-Annahme)."""
-    fixed_leg = sum(fixed_rate / freq * nominal * df
-                    for df in zeros.values())
-    float_leg = nominal * (1 - list(zeros.values())[-1])
-    return fixed_leg - float_leg
-
-def dv01_swap(nominal, fixed_rate, zeros, freq=1):
-    """DV01 via 1-bp-Bump."""
+def dv01_gamma_swap(nominal: float, fixed_rate: float, zeros: dict, freq: int = 1):
+    """DV01 (€/bp) und Gamma (€/bp²) via ±1 bp-Bump."""
     bump = 0.0001  # 1 bp
-    zeros_b = {t: np.exp(-(-np.log(df)/t + bump) * t)
-               for t, df in zeros.items()}
-    pv_base = pv_swap(nominal, fixed_rate, zeros, freq)
-    pv_bump = pv_swap(nominal, fixed_rate, zeros_b, freq)
-    return pv_bump - pv_base  # € pro bp
+    zeros_up   = {t: df * np.exp(-bump * t) for t, df in zeros.items()}
+    zeros_down = {t: df * np.exp(+bump * t) for t, df in zeros.items()}
+
+    pv0   = pv_swap_full(nominal, fixed_rate, zeros, freq)
+    pv_up = pv_swap_full(nominal, fixed_rate, zeros_up, freq)
+    pv_dn = pv_swap_full(nominal, fixed_rate, zeros_down, freq)
+
+    dv01  = (pv_up - pv_dn) / 2          # €/bp
+    gamma = (pv_up + pv_dn - 2 * pv0) / (bump ** 2)
+    return dv01, gamma
