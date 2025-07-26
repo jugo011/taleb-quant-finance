@@ -1,4 +1,4 @@
-nominal: 1.0e8          # 100 000 000 €
+nominal: 100000000      # 100 000 000 €
 fixed_rate: 0.0250      # 2,50 %
 sigma: 0.0005           # 5 bp tägliche Volatilität
 horizon_days: 1
