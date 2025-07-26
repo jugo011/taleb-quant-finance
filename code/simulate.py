@@ -32,7 +32,7 @@ def main():
 
     var_g, es_g = risk_metrics(np.array(losses_gauss))
     var_t, es_t = risk_metrics(np.array(losses_taleb))
-    stress_loss = -dv01 * params["jump_size"]
+    stress_loss = -dv01 * params["jump_size"] * 10_000
 
     print(f"Gaussian  VaR99: {var_g:,.0f} €  |  ES99: {es_g:,.0f} €")
     print(f"Taleb     VaR99: {var_t:,.0f} €  |  ES99: {es_t:,.0f} €")
