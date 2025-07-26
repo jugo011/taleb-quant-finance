@@ -17,6 +17,6 @@ def dv01_gamma_swap(nominal: float, fixed_rate: float, zeros: dict, freq: int = 
     pv_up = pv_swap_full(nominal, fixed_rate, zeros_up, freq)
     pv_dn = pv_swap_full(nominal, fixed_rate, zeros_down, freq)
 
-    dv01  = (pv_up - pv_dn) / 2          # €/bp
-    gamma = (pv_up + pv_dn - 2 * pv0) / (bump ** 2)
+    dv01  = (pv_up - pv_dn) / (2 * bump * 10_000)          # €/bp
+    gamma = (pv_up + pv_dn - 2*pv0) / (bump**2 * 10_000**2)
     return dv01, gamma
