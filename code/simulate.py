@@ -1,11 +1,12 @@
 import numpy as np, yaml, pathlib
-from swap_utils import load_curve, bootstrap_zero, dv01_swap
+from bootstrap import bootstrap_zero
+from swap_utils import dv01_swap
 
 def main():
     # --- Parameter & Kurve einlesen --------------------------------------
     params = yaml.safe_load(pathlib.Path("data/params.yaml").read_text())
     df_curve = load_curve()
-    zeros = bootstrap_zero(df_curve)
+    zeros = bootstrap_zero("data/par_swaps.csv")
 
     # DV01 berechnen
     dv01 = dv01_swap(params["nominal"], params["fixed_rate"], zeros)
