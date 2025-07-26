@@ -1,0 +1,10 @@
+nominal: 1.0e8          # 100 000 000 €
+fixed_rate: 0.0250      # 2,50 %
+sigma: 0.0005           # 5 bp tägliche Volatilität
+horizon_days: 1
+n_paths: 10000
+
+# Taleb-Jump
+use_jump: true
+p_jump_daily: 0.00004   # ≈ 1 % pro Jahr
+jump_size: 0.02         # +200 bp
