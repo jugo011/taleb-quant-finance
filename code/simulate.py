@@ -37,3 +37,13 @@ stress = -(dv01*jump*1e4 + 0.5*gamma*(jump*1e4)**2)
 print(f"Gaussian  VaR99: {var_g:,.0f} € | ES99: {es_g:,.0f} €")
 print(f"Taleb     VaR99: {var_j:,.0f} € | ES99: {es_j:,.0f} €")
 print(f"Stress-Loss (+{jump*1e4:.0f} bp): {stress:,.0f} €")
+# ganz unten, statt nur print()
+def run_simulation():
+    return loss_g, loss_j, var_g, var_j
+
+if __name__ == "__main__":
+    # nur beim direkten Aufruf prints ausgeben
+    print(f"Gaussian  VaR99: {var_g:,.0f} € | ES99: {es_g:,.0f} €")
+    print(f"Taleb     VaR99: {var_j:,.0f} € | ES99: {es_j:,.0f} €")
+    print(f"Stress-Loss (+{jump*1e4:.0f} bp): {stress:,.0f} €")
+
