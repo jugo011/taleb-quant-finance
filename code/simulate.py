@@ -1,42 +1,39 @@
 import numpy as np, yaml, pathlib
 from bootstrap import bootstrap_zero
-from swap_utils import dv01_swap
+from swap_utils import dv01_gamma_swap
 
-def main():
-    # --- Parameter & Kurve einlesen --------------------------------------
-    params = yaml.safe_load(pathlib.Path("data/params.yaml").read_text())
-    zeros = bootstrap_zero("data/par_swaps.csv")
+# ---------- Parameter laden -------------------------------------------------
+params = yaml.safe_load((pathlib.Path(__file__).parents[1] / "data/params.yaml").read_text())
 
-    # DV01 berechnen
-    dv01 = dv01_swap(params["nominal"], params["fixed_rate"], zeros)
+# ---------- Zero-Kurve & Sensitivität ---------------------------------------
+zeros = bootstrap_zero("data/par_swaps.csv")
+dv01, gamma = dv01_gamma_swap(params["nominal"], params["fixed_rate"], zeros)
 
-    rng = np.random.default_rng(42)
-    losses_gauss, losses_taleb = [], []
+# ---------- Monte-Carlo -----------------------------------------------------
+rng = np.random.default_rng(42)
+loss_g, loss_j = [], []
 
-    for _ in range(params["n_paths"]):
-        # Gaussian-Welt
-        dr = rng.normal(0, params["sigma"])
-        losses_gauss.append(-dv01 * dr * 10000)
+sigma = params["sigma"]
+p_jump = params["p_jump_daily"]
+jump = params["jump_size"]
+for _ in range(params["n_paths"]):
+    dr = rng.normal(0, sigma)                               # Gaussian
+    loss_g.append(-(dv01 * dr * 1e4 + 0.5 * gamma * (dr*1e4)**2))
 
-        # Taleb-Welt
-        dr_t = dr
-        if params["use_jump"] and rng.random() < params["p_jump_daily"]:
-            dr_t += params["jump_size"]
-        losses_taleb.append(-dv01 * dr_t * 10000)
+    dr_j = dr + (jump if rng.random() < p_jump else 0.0)    # Taleb-Jump
+    loss_j.append(-(dv01 * dr_j * 1e4 + 0.5 * gamma * (dr_j*1e4)**2))
 
-    # Kennzahlen-Funktion
-    def risk_metrics(losses, alpha=0.99):
-        var = np.quantile(losses, alpha)
-        es = losses[losses >= var].mean()
-        return var, es
+loss_g = np.array(loss_g); loss_j = np.array(loss_j)
 
-    var_g, es_g = risk_metrics(np.array(losses_gauss))
-    var_t, es_t = risk_metrics(np.array(losses_taleb))
-    stress_loss = -dv01 * params["jump_size"] * 10_000
+def risk(losses, q=0.99):
+    var = np.quantile(losses, q)
+    es  = losses[losses >= var].mean()
+    return var, es
 
-    print(f"Gaussian  VaR99: {var_g:,.0f} €  |  ES99: {es_g:,.0f} €")
-    print(f"Taleb     VaR99: {var_t:,.0f} €  |  ES99: {es_t:,.0f} €")
-    print(f"Stress-Loss (+200 bp): {stress_loss:,.0f} €")
+var_g, es_g = risk(loss_g)
+var_j, es_j = risk(loss_j)
+stress = -(dv01*jump*1e4 + 0.5*gamma*(jump*1e4)**2)
 
-if __name__ == "__main__":
-    main()
+print(f"Gaussian  VaR99: {var_g:,.0f} € | ES99: {es_g:,.0f} €")
+print(f"Taleb     VaR99: {var_j:,.0f} € | ES99: {es_j:,.0f} €")
+print(f"Stress-Loss (+{jump*1e4:.0f} bp): {stress:,.0f} €")
