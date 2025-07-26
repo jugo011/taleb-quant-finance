@@ -5,7 +5,6 @@ from swap_utils import dv01_swap
 def main():
     # --- Parameter & Kurve einlesen --------------------------------------
     params = yaml.safe_load(pathlib.Path("data/params.yaml").read_text())
-    df_curve = load_curve()
     zeros = bootstrap_zero("data/par_swaps.csv")
 
     # DV01 berechnen
