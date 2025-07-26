@@ -16,13 +16,13 @@ def main():
     for _ in range(params["n_paths"]):
         # Gaussian-Welt
         dr = rng.normal(0, params["sigma"])
-        losses_gauss.append(-dv01 * dr)
+        losses_gauss.append(-dv01 * dr * 10000)
 
         # Taleb-Welt
         dr_t = dr
         if params["use_jump"] and rng.random() < params["p_jump_daily"]:
             dr_t += params["jump_size"]
-        losses_taleb.append(-dv01 * dr_t)
+        losses_taleb.append(-dv01 * dr_t * 10000)
 
     # Kennzahlen-Funktion
     def risk_metrics(losses, alpha=0.99):
