@@ -8,6 +8,8 @@ params = yaml.safe_load((pathlib.Path(__file__).parents[1] / "data/params.yaml")
 # ---------- Zero-Kurve & Sensitivität ---------------------------------------
 zeros = bootstrap_zero("data/par_swaps.csv")
 dv01, gamma = dv01_gamma_swap(params["nominal"], params["fixed_rate"], zeros)
+from swap_utils import pv_swap_full
+pv0 = pv_swap_full(params["nominal"], params["fixed_rate"], zeros)
 
 # ---------- Monte-Carlo -----------------------------------------------------
 rng = np.random.default_rng(42)
