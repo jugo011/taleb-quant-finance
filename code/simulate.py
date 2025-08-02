@@ -1,7 +1,9 @@
 import numpy as np, yaml, pathlib
 from bootstrap import bootstrap_zero
 from swap_utils import dv01_gamma_swap
-
+from scipy.stats import t as student_t
+df_t = 4          # Freiheitsgrade → Fat-Tail
+scale = simulate.params["sigma"] * np.sqrt((df_t-2)/df_t)
 # ---------- Parameter laden -------------------------------------------------
 params = yaml.safe_load((pathlib.Path(__file__).parents[1] / "data/params.yaml").read_text())
 
