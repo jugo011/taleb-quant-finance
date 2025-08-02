@@ -27,6 +27,11 @@ for _ in range(params["n_paths"]):
     dr_j = dr + (jump if rng.random() < p_jump else 0.0)    # Taleb-Jump
     loss_j.append(-(dv01 * dr_j * 1e4 + 0.5 * gamma * (dr_j*1e4)**2))
 
+     dr = student_t.rvs(df=df_t) * scale          # Student-t Move
+    dr_j = dr + (jump if rng.random() < p_jump else 0)  # Sprung addieren
+    loss_t.append(-(dv01*dr*1e4   + 0.5*gamma*(dr*1e4)**2))
+    loss_tj.append(-(dv01*dr_j*1e4 + 0.5*gamma*(dr_j*1e4)**2))
+
 loss_g = np.array(loss_g); loss_j = np.array(loss_j)
 
 def risk(losses, q=0.99):
@@ -44,6 +49,9 @@ print(f"Stress-Loss (+{jump*1e4:.0f} bp): {stress:,.0f} €")
 # ganz unten, statt nur print()
 def run_simulation():
     return loss_g, loss_j, var_g, var_j
+def run_sim_t():
+    return loss_t, loss_tj
+
 
 if __name__ == "__main__":
     # nur beim direkten Aufruf prints ausgeben
